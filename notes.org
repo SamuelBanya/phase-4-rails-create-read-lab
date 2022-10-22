@@ -1,0 +1,190 @@
+* Notes
+<2022-10-21 Fri 19:09>: I used these commands to set this lab up successfully:
+
+From the 'root' of the project directory:
+#+begin_src bash
+npm install --prefix client
+bundle install
+#+end_src
+
+I then ran the backend server with the 'rails s' command, related output:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-rails-create-read=> Booting Puma
+=> Rails 6.1.3.2 application starting in development
+=> Run `bin/rails server --help` for more startup options
+Puma starting in single mode...
+* Puma version: 5.3.1 (ruby 2.7.4-p191) ("Sweetnighter")
+*  Min threads: 5
+*  Max threads: 5
+*  Environment: development
+*          PID: 29651
+* Listening on http://127.0.0.1:3000
+* Listening on http://[::1]:3000
+Use Ctrl-C to stop
+#+end_src
+
+I then started the React frontend with this command:
+#+begin_src bash
+npm start --prefix client
+#+end_src
+
+Related output:
+#+begin_src bash
+Compiled successfully!
+
+You can now view plantsy-client in the browser.
+
+  Local:            http://localhost:4000
+  On Your Network:  http://192.168.0.158:4000
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+#+end_src
+
+I then proceeded to create a related 'Plant' model via the 'rails g' command with the following requirements:
+|-------------+-----------|
+| Column Name | Data Type |
+|-------------+-----------|
+| name        | string    |
+| image       | string    |
+| price       | decimal   |
+|-------------+-----------|
+
+I then used the following 'rails g model' command to create the 'Plant' model:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-rails-create-read-lab $ rails g model plant name image price:float --no-test-framework
+      invoke  active_record
+      create    db/migrate/20221022003111_create_plants.rb
+      create    app/models/plant.rb
+#+end_src
+
+I then the following 'rails db:migrate db:seed' commands accordingly to ensure the migration and seeding occurred for the project:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-rails-create-read-lab $ rails db:migrate
+== 20221022003111 CreatePlants: migrating =====================================
+-- create_table(:plants)
+   -> 0.0026s
+== 20221022003111 CreatePlants: migrated (0.0027s) ============================
+
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-rails-create-read-lab $ rails db:seed
+🌱 Seeding plants...
+✅ Done seeding!
+#+end_src
+
+I then verified that these plants were created successfully with the 'rails c' console command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-rails-create-read-lab $ rails c
+Loading development environment (Rails 6.1.3.2)
+.gem :001 > Plant.all.count()
+   (0.7ms)  SELECT sqlite_version(*)
+   (0.1ms)  SELECT COUNT(*) FROM "plants"
+ => 7
+.gem :002 > Plant.all()
+  Plant Load (0.4ms)  SELECT "plants".* FROM "plants" /* loading for inspect */ LIMIT ?  [["LIMIT", 11]]
+ => #<ActiveRecord::Relation [#<Plant id: 1, name: "Aloe", image: "./images/aloe.jpg", price: 15.99, created_at: "2022-10-22 00:31:40.963090000 +0000", updated_at: "2022-10-22 00:31:40.963090000 +0000">, #<Plant id: 2, name: "ZZ Plant", image: "./images/zz-plant.jpg", price: 25.98, created_at: "2022-10-22 00:31:40.968962000 +0000", updated_at: "2022-10-22 00:31:40.968962000 +0000">, #<Plant id: 3, name: "Pilea peperomioides", image: "./images/pilea.jpg", price: 5.99, created_at: "2022-10-22 00:31:40.973753000 +0000", updated_at: "2022-10-22 00:31:40.973753000 +0000">, #<Plant id: 4, name: "Pothos", image: "./images/pothos.jpg", price: 12.11, created_at: "2022-10-22 00:31:40.978733000 +0000", updated_at: "2022-10-22 00:31:40.978733000 +0000">, #<Plant id: 5, name: "Jade", image: "./images/jade.jpg", price: 10.37, created_at: "2022-10-22 00:31:40.983432000 +0000", updated_at: "2022-10-22 00:31:40.983432000 +0000">, #<Plant id: 6, name: "Monstera Deliciosa", image: "./images/monstera.jpg", price: 25.99, created_at: "2022-10-22 00:31:40.988304000 +0000", updated_at: "2022-10-22 00:31:40.988304000 +0000">, #<Plant id: 7, name: "Fiddle Leaf Fig", image: "./images/fiddle-leaf-fig.jpg", price: 55.0, created_at: "2022-10-22 00:31:40.993274000 +0000", updated_at: "2022-10-22 00:31:40.993274000 +0000">]>
+#+end_src
+
+<2022-10-21 Fri 19:43>: I then proceeded to create the required routes for the assignment.
+
+I then created a related 'Plants' controller with the following 'rails g controller' command:
+#+begin_src bash
+samuelbanya@Samuels-MBP ~/hub/Development/code/phase-4/phase-4-rails-create-read-lab $ rails g controller Plants --no-test-framework
+      create  app/controllers/plants_controller.rb
+#+end_src
+
+I then modified the 'app/controllers/plants_controller' controller file with the following contents to include the '#index' method:
+#+begin_src ruby
+class PlantsController < ApplicationController
+    def index
+        plants = Plant.all()
+        render json: plants
+    end
+end
+#+end_src
+
+I then modified the 'app/controllers/plants_controller' controller file with the following contents to include the '#show' method:
+#+begin_src ruby
+class PlantsController < ApplicationController
+    def index
+        plants = Plant.all()
+        render json: plants
+    end
+    def show
+        plant = Plant.find_by(id: params[:id])
+        if plant
+            render json: plant
+        else
+            render json: { error: "Plant not found" }, status: :not_found
+        end
+    end
+end
+#+end_src
+
+
+I then modified the 'app/controllers/plants_controller' controller file with the following contents to include the '#create' method:
+#+begin_src ruby
+class PlantsController < ApplicationController
+    wrap_parameters format: []
+    def index
+        plants = Plant.all()
+        render json: plants
+    end
+    def show
+        plant = Plant.find_by(id: params[:id])
+        if plant
+            render json: plant
+        else
+            render json: { error: "Plant not found" }, status: :not_found
+        end
+    end
+    def create
+        plant = Plant.create(plant_params)
+        render json: plant, status: :created
+    end
+
+    private
+    def plant_params
+        params.permit(:name, :image, :price)
+    end
+end
+#+end_src
+
+<2022-10-21 Fri 20:00>: The one thing I forgot was to adjust the 'app/config/routes.rb' routes file accordingly:
+#+begin_src ruby
+Rails.application.routes.draw do
+  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
+  resources :plants, only: [:index, :show, :create]
+end
+#+end_src
+
+
+TEMP:
+#+begin_src ruby
+class PlantsController < ApplicationController
+    # FIRST ATTEMPT
+    # Instead, I have added the following section in the 'config/initializers/wrap_parameters.rb' file instead:
+    # wrap_parameters format: []
+    def index
+        plants = Plant.all()
+        render json: plants
+    end
+    def show
+        plant = Plant.find_by(id: params[:id])
+        if plant
+            render json: plant
+        else
+            render json: { error: "Plant not found" }, status: :not_found
+        end
+    end
+    def create
+        plant = Plant.create(plant_params)
+        render json: plant, status: :created
+    end
+
+    private
+    def plant_params
+        params.permit(:name, :image, :price)
+    end
+end
+
+#+end_src
